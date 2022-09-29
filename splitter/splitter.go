@@ -61,9 +61,8 @@ func Process(sourceName, destinationPrefix string, splitter Splitter) error {
 	for _, file := range zr.File {
 		if strings.HasSuffix(file.Name, ".jsonl") {
 			jsonl = file
-		} else {
-			files[file.Name] = file
 		}
+		files[file.Name] = file
 	}
 
 	fmt.Printf("Number of files in the archive: %d\n", len(zr.File))
