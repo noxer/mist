@@ -108,6 +108,8 @@ func Process(sourceName, destinationPrefix string, splitter Splitter) error {
 			attachments, size = processAttachmentInfos(files, line.Post.Attachments)
 		case "direct_post":
 			attachments, size = processAttachmentInfos(files, line.DirectPost.Attachments)
+		case "emoji":
+			attachments, size = processEmojiInfos(files, line.Emoji.Image)
 		}
 
 		nextState.TotalSize += size
@@ -223,4 +225,18 @@ func processAttachments(files map[string]*zip.File, attachments []string, into *
 	}
 
 	return nil
+}
+
+func processEmojiInfos(files map[string]*zip.File, image *string) ([]string, uint64) {
+	if image == nil || *image == "" {
+		return nil, 0
+	}
+
+	file, ok := files["data/"+*image]
+	if !ok {
+		fmt.Printf("Warning: Missing file data/%s assumed as 0 bytes\n", *image)
+		return []string{*image}, 0
+	}
+
+	return []string{*image}, file.UncompressedSize64
 }
