@@ -111,6 +111,9 @@ func Process(sourceName, destinationPrefix string, splitter Splitter) error {
 		)
 
 		switch line.Type {
+		case "version":
+			// we ignore version lines, so they are not duplicated in the first segment
+			continue
 		case "post":
 			attachments, size = processAttachmentInfos(files, line.Post.Attachments)
 		case "direct_post":
@@ -156,12 +159,9 @@ func Process(sourceName, destinationPrefix string, splitter Splitter) error {
 			jsonlBuffer = bytes.NewBuffer([]byte("{\"type\":\"version\",\"version\":1}\n"))
 		}
 
-		if _, err = jsonlBuffer.Write(s.Bytes()); err != nil {
-			return err
-		}
-		if err = jsonlBuffer.WriteByte('\n'); err != nil {
-			return err
-		}
+		jsonlBuffer.Write(s.Bytes()) // err is always nil
+		jsonlBuffer.WriteByte('\n')  // err is always nil
+
 		if err = processAttachments(files, attachments, partZip); err != nil {
 			return err
 		}
