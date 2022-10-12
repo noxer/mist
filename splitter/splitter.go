@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -35,6 +36,14 @@ func NewSizeSplitter(size uint64) Splitter {
 func Process(sourceName, destinationPrefix string, splitter Splitter) error {
 	if splitter == nil {
 		splitter = func(old, neu *State) bool { return false }
+	}
+
+	// create missing destination directories
+	dir := filepath.Dir(destinationPrefix)
+	if dir != "." && dir != string(filepath.Separator) {
+		if err := os.MkdirAll(dir, 0750); err != nil {
+			return err
+		}
 	}
 
 	// open and index the input archive
@@ -78,12 +87,11 @@ func Process(sourceName, destinationPrefix string, splitter Splitter) error {
 	s.Buffer(make([]byte, 64*1024*1024), 64*1024*1024)
 
 	var (
-		state        State
-		partNumber   uint64
-		partWriter   io.WriteCloser
-		partZip      *zip.Writer
-		jsonlBuffer  *bytes.Buffer
-		jsonlEncoder *json.Encoder
+		state       State
+		partNumber  uint64
+		partWriter  io.WriteCloser
+		partZip     *zip.Writer
+		jsonlBuffer *bytes.Buffer
 	)
 
 	for s.Scan() {
@@ -146,10 +154,12 @@ func Process(sourceName, destinationPrefix string, splitter Splitter) error {
 			}
 			partZip = zip.NewWriter(partWriter)
 			jsonlBuffer = bytes.NewBuffer([]byte("{\"type\":\"version\",\"version\":1}\n"))
-			jsonlEncoder = json.NewEncoder(jsonlBuffer)
 		}
 
-		if err = jsonlEncoder.Encode(line); err != nil {
+		if _, err = jsonlBuffer.Write(s.Bytes()); err != nil {
+			return err
+		}
+		if err = jsonlBuffer.WriteByte('\n'); err != nil {
 			return err
 		}
 		if err = processAttachments(files, attachments, partZip); err != nil {
