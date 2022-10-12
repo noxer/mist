@@ -21,18 +21,19 @@ jobs:
 
       - name: Build project
         run: |
-          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o gops_linux
-          GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o gops_macos
-          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o gops_macos_m1
-          GOOS=freebsd GOARCH=amd64 go build -ldflags="-s -w" -o gops_freebsd
-          GOOS=openbsd GOARCH=amd64 go build -ldflags="-s -w" -o gops_openbsd
-          GOOS=linux GOARCH=arm GOARM=7 go build -ldflags="-s -w" -o gops_raspi
+          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o mist
+          GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o mist_mac
+          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o mist_mac_m1
+          GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o mist.exe
+          GOOS=freebsd GOARCH=amd64 go build -ldflags="-s -w" -o mist_freebsd
+          GOOS=openbsd GOARCH=amd64 go build -ldflags="-s -w" -o mist_openbsd
+          GOOS=linux GOARCH=arm GOARM=7 go build -ldflags="-s -w" -o mist_raspi
 
       - name: Create release
         run: |
           set -x
           assets=()
-          for asset in ./gops_*; do
+          for asset in ./mist*; do
             assets+=("-a" "$asset")
           done
           tag_name="${GITHUB_REF##*/}"
